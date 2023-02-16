@@ -748,7 +748,7 @@ class BaseSecurityManager(AbstractSecurityManager):
         role_view = self.appbuilder.add_view(
             self.rolemodelview,
             "List Roles",
-            icon="fa-group",
+            icon="fa-user-group",
             label=_("List Roles"),
             category="Security",
             category_icon="fa-cogs",
