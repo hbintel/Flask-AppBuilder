@@ -5,10 +5,15 @@ from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder.security.sqla.models import User
 
 from ..base import BaseMVCTestCase
-from ..const import PASSWORD_ADMIN, PASSWORD_READONLY, USERNAME_ADMIN, USERNAME_READONLY
+from ..const import (
+    INVALID_LOGIN_STRING,
+    PASSWORD_ADMIN,
+    PASSWORD_READONLY,
+    USERNAME_ADMIN,
+    USERNAME_READONLY,
+)
 from ..sqla.models import Model1, Model2
 
-INVALID_LOGIN_STRING = "Invalid login"
 PASSWORD_COMPLEXITY_ERROR = (
     "Must have at least two capital letters, "
     "one special character, two digits, three lower case letters and "
@@ -203,10 +208,30 @@ class MVCSecurityTestCase(BaseMVCTestCase):
             self.client,
             USERNAME_ADMIN,
             PASSWORD_ADMIN,
-            next_url=u"\u0001" + "sample.com",
+            next_url="\u0001" + "sample.com",
             follow_redirects=False,
         )
         assert response.location == "http://localhost/"
+
+    def test_db_login_failed_keep_next_url(self):
+        """
+        Test Security Keeping next url after failed login attempt
+        """
+        self.browser_logout(self.client)
+        response = self.browser_login(
+            self.client,
+            USERNAME_ADMIN,
+            f"wrong_{PASSWORD_ADMIN}",
+            next_url="/users/list/",
+            follow_redirects=False,
+        )
+        response = self.client.post(
+            response.location,
+            data=dict(username=USERNAME_ADMIN, password=PASSWORD_ADMIN),
+            follow_redirects=False,
+        )
+
+        assert response.location == "http://localhost/users/list/"
 
     def test_auth_builtin_roles(self):
         """

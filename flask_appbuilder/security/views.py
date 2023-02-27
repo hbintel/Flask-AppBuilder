@@ -514,15 +514,15 @@ class AuthDBView(AuthView):
             return redirect(self.appbuilder.get_url_for_index)
         form = LoginForm_db()
         if form.validate_on_submit():
+            next_url = get_safe_redirect(request.args.get("next", ""))
             user = self.appbuilder.sm.auth_user_db(
                 form.username.data, form.password.data
             )
             if not user:
                 flash(as_unicode(self.invalid_login_message), "warning")
-                return redirect(self.appbuilder.get_url_for_login)
+                return redirect(self.appbuilder.get_url_for_login_with(next_url))
             login_user(user, remember=False)
-            next_url = request.args.get("next", "")
-            return redirect(get_safe_redirect(next_url))
+            return redirect(next_url)
         return self.render_template(
             self.login_template, title=self.title, form=form, appbuilder=self.appbuilder
         )
@@ -537,15 +537,15 @@ class AuthLDAPView(AuthView):
             return redirect(self.appbuilder.get_url_for_index)
         form = LoginForm_db()
         if form.validate_on_submit():
+            next_url = get_safe_redirect(request.args.get("next", ""))
             user = self.appbuilder.sm.auth_user_ldap(
                 form.username.data, form.password.data
             )
             if not user:
                 flash(as_unicode(self.invalid_login_message), "warning")
-                return redirect(self.appbuilder.get_url_for_login)
+                return redirect(self.appbuilder.get_url_for_login_with(next_url))
             login_user(user, remember=False)
-            next_url = request.args.get("next", "")
-            return redirect(get_safe_redirect(next_url))
+            return redirect(next_url)
         return self.render_template(
             self.login_template, title=self.title, form=form, appbuilder=self.appbuilder
         )
@@ -654,7 +654,7 @@ class AuthOAuthView(AuthView):
     def oauth_authorized(self, provider: str) -> WerkzeugResponse:
         log.debug("Authorized init")
         if provider not in self.appbuilder.sm.oauth_remotes:
-            flash(u"Provider not supported.", "warning")
+            flash("Provider not supported.", "warning")
             log.warning("OAuth authorized got an unknown provider %s", provider)
             return redirect(self.appbuilder.get_url_for_login)
         try:
@@ -685,7 +685,7 @@ class AuthOAuthView(AuthView):
                         allow = True
                         break
                 if not allow:
-                    flash(u"You are not authorized.", "warning")
+                    flash("You are not authorized.", "warning")
                     return redirect(self.appbuilder.get_url_for_login)
             else:
                 log.debug("No whitelist for OAuth provider")

@@ -162,6 +162,7 @@ class AppBuilder:
         app.config.setdefault("APP_ICON", "")
         app.config.setdefault("LANGUAGES", {"en": {"flag": "gb", "name": "English"}})
         app.config.setdefault("ADDON_MANAGERS", [])
+        app.config.setdefault("RATELIMIT_ENABLED", False)
         app.config.setdefault("FAB_API_MAX_PAGE_SIZE", 100)
         app.config.setdefault("FAB_BASE_TEMPLATE", self.base_template)
         app.config.setdefault("FAB_STATIC_FOLDER", self.static_folder)
@@ -446,6 +447,7 @@ class AppBuilder:
             if self.app:
                 self.register_blueprint(baseview)
                 self._add_permission(baseview)
+                self.add_limits(baseview)
         self.add_link(
             name=name,
             href=href,
@@ -564,6 +566,7 @@ class AppBuilder:
                     baseview, endpoint=endpoint, static_folder=static_folder
                 )
                 self._add_permission(baseview)
+                self.add_limits(baseview)
         else:
             log.warning(LOGMSG_WAR_FAB_VIEW_EXISTS.format(baseview.__class__.__name__))
         return baseview
@@ -610,6 +613,11 @@ class AppBuilder:
             return {}
         return self.sm.security_converge(self.baseviews, self.menu.menu, dry)
 
+    def get_url_for_login_with(self, next_url: str = None) -> str:
+        if self.sm.auth_view is None:
+            return ""
+        return url_for("%s.%s" % (self.sm.auth_view.endpoint, "login"), next=next_url)
+
     @property
     def get_url_for_login(self) -> str:
         if self.sm.auth_view is None:
@@ -643,6 +651,10 @@ class AppBuilder:
             "%s.%s" % (self.bm.locale_view.endpoint, self.bm.locale_view.default_view),
             locale=lang,
         )
+
+    def add_limits(self, baseview: "AbstractViewApi") -> None:
+        if hasattr(baseview, "limits"):
+            self.sm.add_limit_view(baseview)
 
     def add_permissions(self, update_perms: bool = False) -> None:
         from flask_appbuilder.baseviews import AbstractViewApi

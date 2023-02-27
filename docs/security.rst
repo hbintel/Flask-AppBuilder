@@ -154,6 +154,21 @@ You can give FlaskAppBuilder roles based on LDAP roles (note, this requires AUTH
     # force users to re-auth after 30min of inactivity (to keep roles in sync)
     PERMANENT_SESSION_LIFETIME = 1800
 
+TLS
+~~~
+
+For STARTTLS, configure an `ldap://` server and set `AUTH_LDAP_USE_TLS` to `True`::
+
+    AUTH_LDAP_SERVER = "ldap://ldap.example.com"
+    AUTH_LDAP_USE_TLS = True
+
+For LDAP over TLS (ldaps), configure the server with the `ldaps://` scheme and set `AUTH_LDAP_USE_TLS` to `False`::
+
+    AUTH_LDAP_SERVER = "ldaps://ldap.example.com"
+    AUTH_LDAP_USE_TLS = False
+
+Additional LDAP/TLS Options, including CA certificate settings and client authentication, can be found in the :doc:`config`.
+
 Authentication: OAuth
 ---------------------
 
@@ -373,6 +388,16 @@ You can also use the OAuth provider APIs.
 Therefore, you can send tweets, post on the users Facebook, retrieve the user's LinkedIn profile etc.
 Take a look at the `example <https://github.com/dpgaspar/Flask-AppBuilder/tree/master/examples/oauth>`_
 to get an idea of a simple use for this.
+
+Authentication: Rate limiting
+-----------------------------
+
+To prevent brute-forcing of credentials, you can apply rate limits to AuthViews in 4.2.0, so that
+only 10 POST requests can be made every 20 seconds. This can be enabled by setting
+``AUTH_RATE_LIMITED`` and ``RATELIMIT_ENABLED`` to ``True``.
+The rate can be changed by adjusting ``AUTH_RATE_LIMIT`` to, for example, ``1 per 10 seconds``. Take a look
+at the `documentation <https://flask-limiter.readthedocs.io/en/stable/>`_ of Flask-Limiter for more options and
+examples.
 
 Role based
 ----------
